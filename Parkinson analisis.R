@@ -1,6 +1,7 @@
 setwd("C:/Users/wazud/Desktop/Maestria/Repositorio Tesis")
 library(readxl)
 library(dummies)
+library(GGally)
 
 #importanción y preparación de datos
 park <- read_excel("Base de Datos Parkinson UTMON.xlsx")
@@ -9,7 +10,11 @@ park<-park[c(6:143),c(1,2,9,10,12,13,14)]
 View(park)
 names(park)
 
+#Hay un f minuscula que lo pone como NA, por ello se corrige antes de
+table(park$SEXO)
+park[park$SEXO=="f",1]="F"
 park$SEXO<-factor(park$SEXO,levels=c("F","M"),labels=c("M","H"))
+
 park$OFF<-factor(park$`PRESENCIA DE OFF PROBLEMATICOS`,
                  levels=c("1 SI","0 NO"),
                  labels=c("SI","NO"))
@@ -36,10 +41,9 @@ park$TREMORIGENA<-factor(park$`PRESENTACION)2 TREMORIGENA`,
 park$`PRESENTACION)2 TREMORIGENA`<-NULL
 
 
+#Análisis Estádistico 
 
-
-
-
+ggpairs(park)
 
 #Calculo de nÃºmero de clusters
 

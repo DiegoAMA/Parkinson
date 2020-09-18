@@ -1,4 +1,48 @@
+setwd("C:/Users/wazud/Desktop/Maestria/Repositorio Tesis")
+library(readxl)
+library(dummies)
+
+#importanción y preparación de datos
+park <- read_excel("Base de Datos Parkinson UTMON.xlsx")
+attach(park)
+park<-park[c(6:143),c(1,2,9,10,12,13,14)]
+View(park)
+names(park)
+
+park$SEXO<-factor(park$SEXO,levels=c("F","M"),labels=c("M","H"))
+park$OFF<-factor(park$`PRESENCIA DE OFF PROBLEMATICOS`,
+                 levels=c("1 SI","0 NO"),
+                 labels=c("SI","NO"))
+park$`PRESENCIA DE OFF PROBLEMATICOS`<-NULL
+park$DISCINESIA<-factor(park$`PRESENCIA DE DISKINESIAS PROBLEMATICAS`,
+                                                      levels=c("1 SI","0 NO"),
+                                                      labels=c("SI","NO"))
+park$`PRESENCIA DE DISKINESIAS PROBLEMATICAS`<-NULL
+
+sintomas<-as.data.frame(dummy(park$PRESENTACION))
+View(sintomas)
+
+i<-1
+for (i in 1:length(sintomas[,1])) {
+  ifelse(sintomas[i,3]==1,sintomas[i,c(1,2)]<-1,sintomas[i,c(1,2)])  
+}
+park$PRESENTACION<-NULL
+park<-cbind(park,sintomas[,c(1,2)])
+park$RIGIDOACINETICA<-factor(park$`PRESENTACION)1 RIGIDOACINETICA`,
+                             levels=c("1","0"),labels=c("SI","NO"))
+park$`PRESENTACION)1 RIGIDOACINETICA`<-NULL
+park$TREMORIGENA<-factor(park$`PRESENTACION)2 TREMORIGENA`,
+                         levels=c("1","0"),labels=c("SI","NO"))
+park$`PRESENTACION)2 TREMORIGENA`<-NULL
+
+
+
+
+
+
+
 #Calculo de nÃºmero de clusters
+
 library(readxl)
 
 MUESTRA<- read_excel("C:/Users/wazud/Desktop/MUESTRA COMPLETA.xlsx", 

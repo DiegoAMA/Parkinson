@@ -6,8 +6,13 @@ library(ggplot2)
 library(stats)
 library(vcd)
 library(lattice)
-
-#importanción y preparación de datos
+library(NbClust)
+library(factoextra)
+library(cluster)
+library(nortest)
+library(agricolae)
+#_________________________________________________
+####importanción y preparación de datos####
 park <- read_excel("Base de Datos Parkinson UTMON.xlsx")
 park<-park[c(6:143),c(1,2,4,9,10,12,13,14)]
 names(park)
@@ -46,7 +51,8 @@ colnames(park)<-c("SEXO","EDAD","ENFERMEDADES","AÑOS_EVOL","UPDRS","OFF","DISCIN
 rm(sintomas)
 rm(i)
 
-#Análisis Estádistico 
+#________________________________________________________________
+####Análisis Estádistico ####
 
 ggpairs(park)+theme(plot.background = element_rect(fill="white"),
                     panel.background = element_rect(fill = "lightblue",
@@ -130,297 +136,151 @@ bwplot(UPDRS~RIGIDOACINETICA|TREMORIGENA,data=park,col="red",main="UPDRS - Rigid
 #al cuadrado las variables numéricas como sus interacciones
 
 
+#________________________________________________________________
+####Análisis Clusters####
 
-#Calculo de nÃºmero de clusters
+                  ###k MEDOIDES###
 
-library(readxl)
+#Outliers y preparación de datos para K-medoides
+names(park)
+boxplot(park$EDAD)
+boxplot(park$ENFERMEDADES)#Quitar mayores a 5
+boxplot(park$AÑOS_EVOL)#Quitar mayores a 30
+boxplot(park$UPDRS)
 
-MUESTRA<- read_excel("C:/Users/wazud/Desktop/MUESTRA COMPLETA.xlsx", 
-                     sheet = "Cluster")
-attach(MUESTRA)
+park.2<-park[park$ENFERMEDADES<5,]
+park.2<-park.2[park.2$AÑOS_EVOL<30,]
 
-cluster<-c(UPDRS,AEV,TREM,OFF,RIGI)
-dim(cluster)<-c(138,5)
+boxplot(park.2$EDAD)
+boxplot(park.2$ENFERMEDADES)
+boxplot(park.2$AÑOS_EVOL)
+boxplot(park.2$UPDRS)
 
-n<-nrow(MUESTRA)
-wss<-rep(0,10)
-wss[1]<-(n-1)*sum(apply(cluster,2,var))
-for(i in 2:10)wss[i]<-sum(kmeans(cluster,centers = i)$withinss)
-plot(1:10, wss, type = "b", xlab = "Números de grupos", ylab = "Suma de los cuadrados dentro de los grupos",lwd=1.5,col="blue", cex.lab=1.6)
-abline(h=c(5000,10000,15000,20000,25000,30000,35000),v=c(1,2,3,4,5,6,7,8,9,10),col="pink")
+#as.numeric 1=SI,2=NO
+#as.numeric 1=M, 2=H
 
-#CLUSTER K MEANS 
-set.seed(80)
-Acluster<-(cluster)
-R<-kmeans(Acluster, 4, iter.max = 10000, nstart = 10)
-R$centers
+i<-1
+for (i in i:9) {
+  ifelse(is.factor(park.2[,i]),
+         park.2[,i]<-as.numeric(park.2[,i]),
+         park.2[,i])
+}
 
+park.2.scaled<-scale(park.2)
 
-plot(Acluster[,2],Acluster[,1],col=R$cluster,pch=19,ylab="UPDRS III",xlab="Sexo")
-points(centers,cex=3,col=2,pch=4)
-plot(Acluster[,3],Acluster[,1],col=R$cluster,pch=19,ylab="UPDRS III",xlab="SÃ­ntoma Tremorigeno")
-plot(Acluster[,4],Acluster[,1],col=R$cluster,pch=19,ylab="UPDRS III",xlab="Bloqueo")
-plot(Acluster[,4],Acluster[,1],col=R$cluster,pch=19,ylab="UPDRS III",xlab="Rigidez")
+#Calculo de núumero de clusters
 
-b<-R$cluster
-table(b)
+fviz_nbclust(park.2.scaled,kmeans,method = "wss")#2, 5 y 7
+NbClust(park.2.scaled,min.nc=2,max.nc=10,method="kmeans",
+        index="all")#2, 4, 7
 
-names(MUESTRA)
+#K medoides
+park_cluster.2<-pam(park.2.scaled,2)
+park_cluster.3<-pam(park.2.scaled,3)
+park_cluster.5<-pam(park.2.scaled,5)
+park_cluster.7<-pam(park.2.scaled,7)
 
-#Exportar
-KMF<-c(UPDRS,SEX,ED,AEV,OFF,RIGI,TREM,ENF,MEDIC,MED_EX,b)
-dim(KMF)<-c(138,11)
-colnames(KMF) <- c(names(MUESTRA),"Grupo")
-library(xlsx)
-write.xlsx(KMF, "Resultados Conglomerado/KMeansF.xlsx", sheet = "KMF")
+par(mfrow=c(2,2))
+fviz_cluster(park_cluster.2,data=park.2.scaled)#Buena clasificación
+fviz_cluster(park_cluster.3,data=park.2.scaled)#Opción
+fviz_cluster(park_cluster.5,data=park.2.scaled)
+fviz_cluster(park_cluster.7,data=park.2.scaled)
 
-#GRUPOS
-G1<-subset(KMF, KMF[,11]==1)
-G2<-subset(KMF, KMF[,11]==2)
-G3<-subset(KMF, KMF[,11]==3)
-G4<-subset(KMF, KMF[,11]==4)
+park.2$cluster.2<-as.data.frame(park_cluster.2$clustering)[,1]
+park.2$cluster.3<-as.data.frame(park_cluster.3$clustering)[,1]
 
-GG1<-rep(c("G1"),times=table(b)[1])
-GG2<-rep(c("G2"),times=table(b)[2])
-GG3<-rep(c("G3"),times=table(b)[3])
-GG4<-rep(c("G4"),times=table(b)[4])
+#Comparación de 2 y 3 clusters
+par(mfrow=c(2,4))
 
-#variables para analisis
-GRUPOS<-c(GG1,GG2,GG3,GG4)
-aUPDRS<-c(G1[,1],G2[,1],G3[,1],G4[,1])
-aSEX<-c(G1[,2],G2[,2],G3[,2],G4[,2])
-aED<-c(G1[,3],G2[,3],G3[,3],G4[,3])
-aAEV<-c(G1[,4],G2[,4],G3[,4],G4[,4])
-aOFF<-c(G1[,5],G2[,5],G3[,5],G4[,5])
-aRIGI<-c(G1[,6],G2[,6],G3[,6],G4[,6])
-aTREM<-c(G1[,7],G2[,7],G3[,7],G4[,7])
-aENF<-c(G1[,8],G2[,8],G3[,8],G4[,8])
-aMEDIC<-c(G1[,9],G2[,9],G3[,9],G4[,9])
-aMED_EX<-c(G1[,10],G2[,10],G3[,10],G4[,10])
+boxplot(SEXO~cluster.2,data=park.2)
+boxplot(SEXO~cluster.3,data=park.2)
 
+boxplot(EDAD~cluster.2,data=park.2)
+boxplot(EDAD~cluster.3,data=park.2)
 
-#PARA LA VARIABLE UPDRS
-boxplot(G1[,1],G2[,1],G3[,1],G4[,1])
-anova<-aov(aUPDRS~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-plot(RE)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
+boxplot(ENFERMEDADES~cluster.2,data=park.2)
+boxplot(ENFERMEDADES~cluster.3,data=park.2)
 
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
+boxplot(AÑOS_EVOL~cluster.2,data=park.2)
+boxplot(AÑOS_EVOL~cluster.3,data=park.2)
 
-#para la variable sexo
-boxplot(R$cluster~SEX)
-boxplot(G1[,2],G2[,2],G3[,2],G4[,2])
-anova<-aov(aSEX~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-plot(RE)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
+boxplot(OFF~cluster.2,data=park.2)
+boxplot(OFF~cluster.3,data=park.2)
 
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
+boxplot(DISCINESIA~cluster.2,data=park.2)
+boxplot(DISCINESIA~cluster.3,data=park.2)
 
-wilcox.test(G1[,2],G2[,2],exact = FALSE)
-wilcox.test(G1[,2],G3[,2],exact = FALSE)
-wilcox.test(G1[,2],G4[,2],exact = FALSE)
-wilcox.test(G2[,2],G3[,2],exact = FALSE)
-wilcox.test(G2[,2],G4[,2],exact = FALSE)
-wilcox.test(G3[,2],G4[,2],exact = FALSE)
+boxplot(RIGIDOACINETICA~cluster.2,data=park.2)
+boxplot(RIGIDOACINETICA~cluster.3,data=park.2)
 
-#para la variable edad
-boxplot(G1[,3],G2[,3],G3[,3],G4[,3])
-anova<-aov(aED~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-plot(RE)
+boxplot(TREMORIGENA~cluster.2,data=park.2)
+boxplot(TREMORIGENA~cluster.3,data=park.2)
+#Debido al análisis se manejaran dos clusters con kmedoides
 
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
+par(mar=c(1,1,1,1))
 
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
+dif<-function(num_var){
+  boxplot(park.2[,num_var]~cluster.2,data=park.2)
+  anova<-aov(park.2[,num_var]~cluster.2,data=park.2)
+  print(summary(anova))
+  RE<-residuals(anova)
+  lol<-ad.test(RE)
+  if(lol$p.value>=0.05){
+    print("----Residuales Normales----")
+    dif<-LSD.test(anova,"cluster.2")
+    print("LSD.test: ")
+    print(dif$groups)
+    
+  }else{
+    print("----Residuales NO Normales----")
+    dif<-wilcox.test(park.2[park.2$cluster.2==1,1],
+                     park.2[park.2$cluster.2==2,1],
+                     paired = F)
+    paste("wilcox coef:  ",dif$p.value)
+  }
+}#Función para análisis de variables
 
-#para la variable AÃ±os de evoluciÃ³n
-boxplot(G1[,4],G2[,4],G3[,4],G4[,4])
-anova<-aov(aAEV~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
+#SEXO
+dif(1)#No existe diferencia
 
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
+#EDAD
+dif(2)#NO existe diferencia
 
+#Núm de enfermedades
+dif(3)#No existe diferencia
 
-wilcox.test(G1[,4],G2[,4],exact = FALSE)
-wilcox.test(G1[,4],G3[,4],exact = FALSE)
-wilcox.test(G1[,4],G4[,4],exact = FALSE)
-wilcox.test(G2[,4],G3[,4],exact = FALSE)
-wilcox.test(G2[,4],G4[,4],exact = FALSE)
-wilcox.test(G3[,4],G4[,4],exact = FALSE)
+#Años de evolución 
+dif(4)#No hay diferencia por los outliers del grupo 2
 
-#PARA LA VARIABLE Congelamiento
-boxplot(R$cluster~OFF)
-boxplot(G1[,5],G2[,5],G3[,5],G4[,5])
-anova<-aov(aOFF~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
+#UPDRS III
+dif(5)# Existe Diferencia
 
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
+#Congelamiento
+dif(6)#No existe diferencia por los outilers 
 
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
+#Discinesia
+dif(7)#No existe diferencia
 
-wilcox.test(G1[,5],G2[,5],exact = FALSE)
-wilcox.test(G1[,5],G3[,5],exact = FALSE)
-wilcox.test(G1[,5],G4[,5],exact = FALSE)
-wilcox.test(G2[,5],G3[,5],exact = FALSE)
-wilcox.test(G2[,5],G4[,5],exact = FALSE)
-wilcox.test(G3[,5],G4[,5],exact = FALSE)
+#RIGIDOACINETICA
+dif(8)#No existe diferencia
 
-#PARA LA VARIABLE Rigidez
-boxplot(R$cluster~RIGI)
-boxplot(G1[,6],G2[,6],G3[,6],G4[,6])
-anova<-aov(aRIGI~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
+#TREMORIGENA
+dif(9)#No existe diferencia
 
-wilcox.test(G1[,6],G2[,6],exact = FALSE)
-wilcox.test(G1[,6],G3[,6],exact = FALSE)
-wilcox.test(G1[,6],G4[,6],exact = FALSE)
-wilcox.test(G2[,6],G3[,6],exact = FALSE)
-wilcox.test(G2[,6],G4[,6],exact = FALSE)
-wilcox.test(G3[,6],G4[,6],exact = FALSE)
+ggplot(park.2,aes(y=UPDRS,x=EDAD,size=OFF,col=cluster.2,alpha=0.5))+
+  geom_point()+
+  scale_size_continuous(range = c(5,15))
 
-#PARA LA VARIABLE Problemas de movimiento
-boxplot(R$cluster~TREM)
-boxplot(TREM~R$cluster)
-anova<-aov(aTREM~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
+G1<-park.2[park.2$cluster.2==1,]
+G1$cluster.2<-NULL
+G2<-park.2[park.2$cluster.2==2,]
+G2$cluster.2<-NULL
 
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
+cluster1<-apply(G1, 2, mean)
+cluster2<-apply(G2, 2, mean)
 
-wilcox.test(G1[,7],G2[,7],exact = FALSE)
-wilcox.test(G1[,7],G3[,7],exact = FALSE)
-wilcox.test(G1[,7],G4[,7],exact = FALSE)
-wilcox.test(G2[,7],G3[,7],exact = FALSE)
-wilcox.test(G2[,7],G4[,7],exact = FALSE)
-wilcox.test(G3[,7],G4[,7],exact = FALSE)
-
-
-#PARA LA VARIABLE NÃºmero de Enfermedades
-boxplot(G1[,8],G2[,8],G3[,8],G4[,8])
-anova<-aov(aENF~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-plot(RE)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
-
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,8],G2[,8],exact = FALSE)
-wilcox.test(G1[,8],G3[,8],exact = FALSE)
-wilcox.test(G1[,8],G4[,8],exact = FALSE)
-wilcox.test(G2[,8],G3[,8],exact = FALSE)
-wilcox.test(G2[,8],G4[,8],exact = FALSE)
-wilcox.test(G3[,8],G4[,8],exact = FALSE)
-
-#PARA LA VARIABLE NÃºmero de Medicamentos
-boxplot(G1[,9],G2[,9],G3[,9],G4[,9])
-anova<-aov(aMEDIC~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-plot(RE)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
-
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,9],G2[,9],exact = FALSE)
-wilcox.test(G1[,9],G3[,9],exact = FALSE)
-wilcox.test(G1[,9],G4[,9],exact = FALSE)
-wilcox.test(G2[,9],G3[,9],exact = FALSE)
-wilcox.test(G2[,9],G4[,9],exact = FALSE)
-wilcox.test(G3[,9],G4[,9],exact = FALSE)
-
-#PARA LA VARIABLE NÃºmero de Medicamentos exlcusivos
-boxplot(G1[,10],G2[,10],G3[,10],G4[,10])
-anova<-aov(aMED_EX~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-plot(RE)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(nortest)
-ad.test(RE)
-pearson.test(RE)
-
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,10],G2[,10],exact = FALSE)
-wilcox.test(G1[,10],G3[,10],exact = FALSE)
-wilcox.test(G1[,10],G4[,10],exact = FALSE)
-wilcox.test(G2[,10],G3[,10],exact = FALSE)
-wilcox.test(G2[,10],G4[,10],exact = FALSE)
-wilcox.test(G3[,10],G4[,10],exact = FALSE)
-
+resultado<-cbind(cluster1,cluster2)
+resultado<-round(resultado,0)
 
 ###CLUSTER KPROTOTYPE
 library(readxl)
@@ -682,244 +542,3 @@ wilcox.test(g2[,10],g3[,10],exact = FALSE)
 wilcox.test(g2[,10],g4[,10],exact = FALSE)
 wilcox.test(g3[,10],g4[,10],exact = FALSE)
 
-#CLUSTER K MEANS DIST Mahalanobis
-
-set.seed(80)
-Acluster<-(MUESTRA)
-
-cluster<-c(UPDRS,AEV,TREM,OFF,RIGI)
-dim(cluster)<-c(138,5)
-
-mean<-colMeans(cluster)
-cm<-cov(cluster)
-MAHA<-mahalanobis(cluster,mean,cm)
-
-
-R<-kmeans(MAHA, 4, iter.max = 10000, nstart = 10)
-R$centers
-b3<-R$cluster
-
-
-KM<-c(UPDRS,SEX,ED,AEV,OFF,RIGI,TREM,ENF,MEDIC,MED_EX,b3)
-dim(KM)<-c(138,11)
-colnames(KM) <- c(names(MUESTRA),"Grupo")
-
-library(xlsx)
-write.xlsx(KM, "Resultados Conglomerado/MAHA.xlsx", sheet = "KMF")
-
-
-centers<-c(R$centers[,3],R$centers[,1])
-dim(centers)<-c(4,2)
-plot(Acluster,col=R$cluster,pch=19)
-
-plot(Acluster$ED,Acluster$UPDRS,col=R$cluster,pch=19)
-points(centers,cex=3,col=2,pch=4)
-plot(UPDRS~SEX,col=R$cluster,pch=19)
-plot(ED~SEX,col=R$cluster,pch=19)
-
-G1<-subset(KM, KM[,11]==1)
-G2<-subset(KM, KM[,11]==2)
-G3<-subset(KM, KM[,11]==3)
-G4<-subset(KM, KM[,11]==4)
-
-GG1<-rep(c("G1"),times=table(b)[1])
-GG2<-rep(c("G2"),times=table(b)[2])
-GG3<-rep(c("G3"),times=table(b)[3])
-GG4<-rep(c("G4"),times=table(b)[4])
-
-#variables para analisis
-GRUPOS<-c(GG1,GG2,GG3,GG4)
-aUPDRS<-c(G1[,1],G2[,1],G3[,1],G4[,1])
-aSEX<-c(G1[,2],G2[,2],G3[,2],G4[,2])
-aED<-c(G1[,3],G2[,3],G3[,3],G4[,3])
-aAEV<-c(G1[,4],G2[,4],G3[,4],G4[,4])
-aOFF<-c(G1[,5],G2[,5],G3[,5],G4[,5])
-aRIGI<-c(G1[,6],G2[,6],G3[,6],G4[,6])
-aTREM<-c(G1[,7],G2[,7],G3[,7],G4[,7])
-aENF<-c(G1[,8],G2[,8],G3[,8],G4[,8])
-aMEDIC<-c(G1[,9],G2[,9],G3[,9],G4[,9])
-aMED_EX<-c(G1[,10],G2[,10],G3[,10],G4[,10])
-
-
-#PARA LA VARIABLE UPDRS
-boxplot(G1[,1],G2[,1],G3[,1],G4[,1])
-anova<-aov(aUPDRS~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-#para la variable sexo
-boxplot(R$cluster~SEX)
-boxplot(SEX~R$cluster)
-anova<-aov(aSEX~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,2],G2[,2],exact = FALSE)
-wilcox.test(G1[,2],G3[,2],exact = FALSE)
-wilcox.test(G1[,2],G4[,2],exact = FALSE)
-wilcox.test(G2[,2],G3[,2],exact = FALSE)
-wilcox.test(G2[,2],G4[,2],exact = FALSE)
-wilcox.test(G3[,2],G4[,2],exact = FALSE)
-
-#para la variable edad
-boxplot(G1[,3],G2[,3],G3[,3],G4[,3])
-anova<-aov(aED~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-library(nortest)
-pearson.test(RE)
-
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-#para la variable AÃ±os de evoluciÃ³n
-boxplot(G1[,4],G2[,4],G3[,4],G4[,4])
-anova<-aov(aAEV~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,4],G2[,4],exact = FALSE)
-wilcox.test(G1[,4],G3[,4],exact = FALSE)
-wilcox.test(G1[,4],G4[,4],exact = FALSE)
-wilcox.test(G2[,4],G3[,4],exact = FALSE)
-wilcox.test(G2[,4],G4[,4],exact = FALSE)
-wilcox.test(G3[,4],G4[,4],exact = FALSE)
-
-#PARA LA VARIABLE Congelamiento
-boxplot(R$cluster~OFF)
-boxplot(OFF~R$cluster)
-anova<-aov(aOFF~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,5],G2[,5],exact = FALSE)
-wilcox.test(G1[,5],G3[,5],exact = FALSE)
-wilcox.test(G1[,5],G4[,5],exact = FALSE)
-wilcox.test(G2[,5],G3[,5],exact = FALSE)
-wilcox.test(G2[,5],G4[,5],exact = FALSE)
-wilcox.test(G3[,5],G4[,5],exact = FALSE)
-
-#PARA LA VARIABLE Rigidez
-boxplot(R$cluster~RIGI)
-boxplot(RIGI~R$cluster)
-anova<-aov(aRIGI~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,6],G2[,6],exact = FALSE)
-wilcox.test(G1[,6],G3[,6],exact = FALSE)
-wilcox.test(G1[,6],G4[,6],exact = FALSE)
-wilcox.test(G2[,6],G3[,6],exact = FALSE)
-wilcox.test(G2[,6],G4[,6],exact = FALSE)
-wilcox.test(G3[,6],G4[,6],exact = FALSE)
-
-#PARA LA VARIABLE Problemas de movimiento
-boxplot(R$cluster~TREM)
-boxplot(TREM~R$cluster)
-anova<-aov(aTREM~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,7],G2[,7],exact = FALSE)
-wilcox.test(G1[,7],G3[,7],exact = FALSE)
-wilcox.test(G1[,7],G4[,7],exact = FALSE)
-wilcox.test(G2[,7],G3[,7],exact = FALSE)
-wilcox.test(G2[,7],G4[,7],exact = FALSE)
-wilcox.test(G3[,7],G4[,7],exact = FALSE)
-
-#PARA LA VARIABLE NÃºmero de Enfermedades
-boxplot(G1[,8],G2[,8],G3[,8],G4[,8])
-anova<-aov(aENF~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,8],G2[,8],exact = FALSE)
-wilcox.test(G1[,8],G3[,8],exact = FALSE)
-wilcox.test(G1[,8],G4[,8],exact = FALSE)
-wilcox.test(G2[,8],G3[,8],exact = FALSE)
-wilcox.test(G2[,8],G4[,8],exact = FALSE)
-wilcox.test(G3[,8],G4[,8],exact = FALSE)
-
-#PARA LA VARIABLE NÃºmero de Medicamentos
-boxplot(G1[,9],G2[,9],G3[,9],G4[,9])
-anova<-aov(aMEDIC~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,9],G2[,9],exact = FALSE)
-wilcox.test(G1[,9],G3[,9],exact = FALSE)
-wilcox.test(G1[,9],G4[,9],exact = FALSE)
-wilcox.test(G2[,9],G3[,9],exact = FALSE)
-wilcox.test(G2[,9],G4[,9],exact = FALSE)
-wilcox.test(G3[,9],G4[,9],exact = FALSE)
-
-#PARA LA VARIABLE NÃºmero de Medicamentos exlcusivos
-boxplot(G1[,10],G2[,10],G3[,10],G4[,10])
-anova<-aov(aMED_EX~GRUPOS)
-summary(anova)
-RE<-residuals(anova)
-shapiro.test(RE)
-library(tseries)
-jarque.bera.test(RE)
-library(agricolae)
-dif<-LSD.test(anova,"GRUPOS")
-DIF<-TukeyHSD(anova)
-
-wilcox.test(G1[,10],G2[,10],exact = FALSE)
-wilcox.test(G1[,10],G3[,10],exact = FALSE)
-wilcox.test(G1[,10],G4[,10],exact = FALSE)
-wilcox.test(G2[,10],G3[,10],exact = FALSE)
-wilcox.test(G2[,10],G4[,10],exact = FALSE)
-wilcox.test(G3[,10],G4[,10],exact = FALSE)

@@ -2,11 +2,14 @@ setwd("C:/Users/wazud/Desktop/Maestria/Repositorio Tesis")
 library(readxl)
 library(dummies)
 library(GGally)
+library(ggplot2)
+library(stats)
+library(vcd)
+library(lattice)
 
 #importanción y preparación de datos
 park <- read_excel("Base de Datos Parkinson UTMON.xlsx")
-attach(park)
-park<-park[c(6:143),c(1,2,9,10,12,13,14)]
+park<-park[c(6:143),c(1,2,4,9,10,12,13,14)]
 View(park)
 names(park)
 
@@ -40,10 +43,74 @@ park$TREMORIGENA<-factor(park$`PRESENTACION)2 TREMORIGENA`,
                          levels=c("1","0"),labels=c("SI","NO"))
 park$`PRESENTACION)2 TREMORIGENA`<-NULL
 
+colnames(park)<-c("SEXO","EDAD","ENFERMEDADES","AÑOS_EVOL","UPDRS","OFF","DISCINESIA",
+                  "RIGIDOACINETICA","TREMORIGENA")
+rm(sintomas)
+rm(i)
 
 #Análisis Estádistico 
 
-ggpairs(park)
+ggpairs(park)+theme(plot.background = element_rect(fill="white"),
+                    panel.background = element_rect(fill = "lightblue",
+                                                    colour = "lightblue",
+                                                    size = 0.5, linetype = "solid"),)
+
+park_num<-data.frame(park$EDAD,park$ENFERMEDADES,park$AÑOS_EVOL,park$UPDRS)
+park_dico<-data.frame(park$SEXO,park$OFF,park$DISCINESIA,park$RIGIDOACINETICA,
+                      park$TREMORIGENA)
+
+cor(park_num)
+#Existe correlación de 0.4 entre la edad y el núm de enfermedades
+#bajo tratamiento, también de 0.48 en el UPDRS con los años de la enfermedad
+
+ggplot(park[park$AÑOS_EVOL<25,], aes(x=EDAD,y=UPDRS,
+                                     size=AÑOS_EVOL,
+                                     col=ENFERMEDADES)) + 
+  geom_point(alpha=0.5) +
+  xlab("Edad")+
+  ylab("UPDRS III")+
+  ggtitle("Variables Cuantitativas con Mayor Correlación")
+
+
+#Test chi cuadrada
+chisq.test(park_dico[,1],park_dico[,2])
+chisq.test(park_dico[,1],park_dico[,3])
+chisq.test(park_dico[,1],park_dico[,4])
+chisq.test(park_dico[,1],park_dico[,5])#Sexo y temblor
+
+chisq.test(park_dico[,2],park_dico[,3])#Congelamiento y Discinecia
+chisq.test(park_dico[,2],park_dico[,4])
+chisq.test(park_dico[,2],park_dico[,5])
+
+chisq.test(park_dico[,3],park_dico[,4])
+chisq.test(park_dico[,3],park_dico[,5])
+
+chisq.test(park_dico[,4],park_dico[,5])#Rigidez y Temblor
+
+
+mosaic(~park.RIGIDOACINETICA+park.DISCINESIA+park.TREMORIGENA,
+           data=park_dico,main="SINTOMAS",
+           labeling=labeling_values,
+       labeling_args = list(set_varnames = c(park.RIGIDOACINETICA="Rigidez", park.DISCINESIA="Discinesia",
+                                             park.TREMORIGENA="Temblores")))
+15/138#porcentaje 3 sintomas
+39/138#Si temblores, No rigidez, No discinesia
+36/138#No temblores, Si rigidez, No discinecia
+37/138#Si temblores, Si rigidez, No discinecia
+names(park)
+bwplot(UPDRS~TREMORIGENA|SEXO,data=park,col="red",main="UPDRS - Temblores, vs Sexo",
+       par.settings = list(box.rectangle = list(fill = c("lightgreen","lightblue"))))
+#No se percibe gran diferencia entre estas variables
+
+bwplot(UPDRS~DISCINESIA|OFF,data=park,col="red",main="UPDRS - Discinesia,- Congelamiento",
+       par.settings = list(box.rectangle = list(fill = c("lightgreen","lightblue"))))
+#Los que poseen congelamiento tienen un UPDRS claramente mayor
+
+bwplot(UPDRS~RIGIDOACINETICA|TREMORIGENA,data=park,col="red",main="UPDRS - Rigidez,- Tembloes",
+       par.settings = list(box.rectangle = list(fill = c("lightgreen","lightblue"))))
+#Se confirma que no existe enfermos sin temblores y sin rigidez
+#pero pueden no tener temblores y presentar un elevado UPDRS
+
 
 #Calculo de nÃºmero de clusters
 

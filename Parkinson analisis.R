@@ -10,7 +10,6 @@ library(lattice)
 #importanción y preparación de datos
 park <- read_excel("Base de Datos Parkinson UTMON.xlsx")
 park<-park[c(6:143),c(1,2,4,9,10,12,13,14)]
-View(park)
 names(park)
 
 #Hay un f minuscula que lo pone como NA, por ello se corrige antes de
@@ -28,7 +27,6 @@ park$DISCINESIA<-factor(park$`PRESENCIA DE DISKINESIAS PROBLEMATICAS`,
 park$`PRESENCIA DE DISKINESIAS PROBLEMATICAS`<-NULL
 
 sintomas<-as.data.frame(dummy(park$PRESENTACION))
-View(sintomas)
 
 i<-1
 for (i in 1:length(sintomas[,1])) {
@@ -69,7 +67,8 @@ ggplot(park[park$AÑOS_EVOL<25,], aes(x=EDAD,y=UPDRS,
   geom_point(alpha=0.5) +
   xlab("Edad")+
   ylab("UPDRS III")+
-  ggtitle("Variables Cuantitativas con Mayor Correlación")
+  ggtitle("Variables Cuantitativas con Mayor Correlación")+
+  scale_size_continuous(range = c(5,20))
 
 
 #Test chi cuadrada
@@ -77,16 +76,30 @@ chisq.test(park_dico[,1],park_dico[,2])
 chisq.test(park_dico[,1],park_dico[,3])
 chisq.test(park_dico[,1],park_dico[,4])
 chisq.test(park_dico[,1],park_dico[,5])#Sexo y temblor
+t<-table(park$SEXO,park$TREMORIGENA,dnn=c("Sexo","Tremorigeno"))
+round(prop.table(t,1),digits=3)
+round(prop.table(t,2),digits=3)
+#El 85% de los hombres padecen temblores
+#En mujeres el 64% 
 
 chisq.test(park_dico[,2],park_dico[,3])#Congelamiento y Discinecia
 chisq.test(park_dico[,2],park_dico[,4])
 chisq.test(park_dico[,2],park_dico[,5])
+t<-table(park$OFF,park$DISCINESIA,dnn=c("Congelamiento","Discinecia"))
+round(prop.table(t,1),digits=3)
+round(prop.table(t,2),digits=3)
+#Si presenta Discinecia, hay 80% de prob de que padezca congelamiento
+#Si no, 79% de no padecer
 
 chisq.test(park_dico[,3],park_dico[,4])
 chisq.test(park_dico[,3],park_dico[,5])
 
 chisq.test(park_dico[,4],park_dico[,5])#Rigidez y Temblor
-
+t<-table(park$RIGIDOACINETICA,park$TREMORIGENA,
+         dnn=c("Rigidez","Tremorigeno"))
+round(prop.table(t,1),digits=3)
+round(prop.table(t,2),digits=3)
+#El 100% de los que no tienen rigidez tienen temblores
 
 mosaic(~park.RIGIDOACINETICA+park.DISCINESIA+park.TREMORIGENA,
            data=park_dico,main="SINTOMAS",
@@ -110,6 +123,12 @@ bwplot(UPDRS~RIGIDOACINETICA|TREMORIGENA,data=park,col="red",main="UPDRS - Rigid
        par.settings = list(box.rectangle = list(fill = c("lightgreen","lightblue"))))
 #Se confirma que no existe enfermos sin temblores y sin rigidez
 #pero pueden no tener temblores y presentar un elevado UPDRS
+
+#EL análisis de regresión lineal y anova queda descartado
+#debido a que los residuales no poseen un comportamiento normal
+#no son homocedasticos, aún quitando valores y elevando 
+#al cuadrado las variables numéricas como sus interacciones
+
 
 
 #Calculo de nÃºmero de clusters

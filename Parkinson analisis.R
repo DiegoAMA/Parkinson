@@ -12,6 +12,8 @@ library(cluster)
 library(nortest)
 library(agricolae)
 library(clustMixType)
+library(fpc)
+
 #_________________________________________________
 ####importanción y preparación de datos####
 park <- read_excel("Base de Datos Parkinson UTMON.xlsx")
@@ -418,4 +420,25 @@ resultado<-as.data.frame(round(resultado,0))
 resultado
 
 write.csv(resultado,file="park_kproto.csv")
+
+
+####Validacion Clusters####
+
+silueta.k<-silhouette(park_cluster.2$clustering,dist(park.2.scaled))
+summary(silueta.k)#Media de 0.26
+fviz_silhouette(silueta.k)
+#kmedoide con 3 clusters da una media de 0.18
+
+silueta.p<-silhouette(clusterprot.3$cluster,dist(park.2.scaled))
+summary(silueta.p)#Media de 0.13
+fviz_silhouette(silueta.p)
+#kproto con 2 cluster da una media de 0.2
+
+stats.k<-cluster.stats(dist(park.2.scaled),park_cluster.2$clustering)
+stats.k$dunn
+
+stats.p<-cluster.stats(dist(park.2.scaled),clusterprot.3$cluster)
+stats.p$dunn
+
+#por lo que el más optimo es el de kmedoides con dos clusters
 

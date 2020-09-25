@@ -1,515 +1,143 @@
-#Exportar
+setwd("C:/Users/wazud/Desktop/Maestria/INVESTIGACION/Pruebas UNAM")
+
 library(readxl)
-base <- read_excel("Pruebas/P52/p52 pies mov.xlsx",
-                   sheet = "Derecha", col_names = FALSE)
-#Izquierda
-#Derecha
-#View(base)
+library(ggplot2)
+library(randomcoloR)
 
-#Funcion para ciclos
-ciclo<-function(t,g){
-  A<-c(t[1:length(table(t))]-t[1])/(t[length(table(t))]-t[1])*100
-  B<-c(g[1:length(table(t))])
-  C<-spline(A,B,xout = 0:100)
-  C<-c(0:100,data.frame(C)[1:101,2])
-  dim(C)<-c(101,2)
-  C
-}
+#Exportar
+url<-"P14/p14 mov manos.xlsx"
+extremidad<-"Izquierda"
 
-#funcion aplicada
-N<-length(base)
-CICLOS<-list()
+base <- read_excel(url,sheet = extremidad, col_names = FALSE)
 
-i<-1
+#Ciclos
+num_ci<-length(base[1,])/2
+ciclos<-list()
+
+i<-2
 j<-1
-while(j<=N/2 && i<=N-1){
-  CICLOS[[j]]<-ciclo(base[,i,1],base[,i+1,1])
-  i<-i+2
-  j<-j+1
+while (i<= num_ci*2) {
+  ciclos[[j]]<-data.frame(na.omit(base[,c(i-1,i)]))
+  MIN<-min(ciclos[[j]][,1])
+  MAX<-max(ciclos[[j]][,1])
+  
+  k<-1
+  for (k in k:length(ciclos[[j]][,1])) {
+    ciclos[[j]][k,1]<-((ciclos[[j]][k,1]-MIN)/(MAX-MIN))*100
+  }
+  ciclos[[j]]<-data.frame(spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100))[,2]
+  i=i+2
+  j=j+1
+  
 }
-#dimencionamiento de ciclos y desviacion
-  CP<-c(0:201)
-  dim(CP)<-c(101,2)
-  Des<-c(0:201)
-  dim(Des)<-c(101,2)
-  
-#calculo promedio y desviacion
-if(N/2==1){
-  CP<-CICLOS[[1]]
-  plot(CP,type="l",col="red",main=expression("Aceleraciones capturadas"),
-       xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-       ylim=c(0, max(CICLOS[[1]][,2])+0.05),lwd=2)
-  abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
 
-    
-  }else if(N/2==2){
-  for (i in 1:101) {
-    CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2]))
-    Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2]))
-  }
-  plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-       xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-       ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-  abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-  lines(CICLOS[[2]],col="blue",lwd=1)
-  lines(CP,col="red",lwd=1.5)
+color<-randomColor(num_ci)
+plot(ciclos[[1]],type="l",
+     ylab="Aceleraci髇 [g]",xlab="porcentaje de ciclo %",
+     col=color[1])
+legend("topright",legend=c(1:num_ci),cex=0.5,fill=color)
+grid()
+lines(ciclos[[2]],col=color[2])  
+lines(ciclos[[3]],col=color[3])  
+lines(ciclos[[4]],col=color[4])  
+lines(ciclos[[5]],col=color[5])  
+lines(ciclos[[6]],col=color[6])  
+lines(ciclos[[7]],col=color[7])  
+lines(ciclos[[8]],col=color[8])  
+lines(ciclos[[9]],col=color[9])  
+lines(ciclos[[10]],col=color[10])  
+lines(ciclos[[11]],col=color[11])  
+lines(ciclos[[12]],col=color[12])  
+lines(ciclos[[13]],col=color[13])  
+lines(ciclos[[14]],col=color[14])  
+lines(ciclos[[15]],col=color[15])  
+lines(ciclos[[16]],col=color[16])  
+lines(ciclos[[17]],col=color[17])  
+lines(ciclos[[18]],col=color[18])  
+lines(ciclos[[19]],col=color[19])  
+lines(ciclos[[20]],col=color[20])  
 
-  
-  }else if(N/2==3){
-  for (i in 1:101) {
-    CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2]))
-    Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2]))
-  } 
-  plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-       xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-       ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-  abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-  lines(CICLOS[[2]],col="blue",lwd=1)
-  lines(CICLOS[[3]],col="black",lwd=1)
-  lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==4){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==5){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==6){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==7){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  
-  }else if(N/2==8){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==9){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==10){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==11){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==12){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==13){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==14){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CICLOS[[14]],col="blue4",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  
-  
-  }else if(N/2==15){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CICLOS[[14]],col="blue4",lwd=1)
-    lines(CICLOS[[15]],col="brown4",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-    
-  }else if(N/2==16){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CICLOS[[14]],col="blue4",lwd=1)
-    lines(CICLOS[[15]],col="brown4",lwd=1)
-    lines(CICLOS[[16]],col="brown2",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-    
-  }else if(N/2==17){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CICLOS[[14]],col="blue4",lwd=1)
-    lines(CICLOS[[15]],col="brown4",lwd=1)
-    lines(CICLOS[[16]],col="brown2",lwd=1)
-    lines(CICLOS[[17]],col="blue2",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-    
-  }else if(N/2==18){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2],CICLOS[[18]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2],CICLOS[[18]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CICLOS[[14]],col="blue4",lwd=1)
-    lines(CICLOS[[15]],col="brown4",lwd=1)
-    lines(CICLOS[[16]],col="brown2",lwd=1)
-    lines(CICLOS[[17]],col="blue2",lwd=1)
-    lines(CICLOS[[18]],col="chocolate4",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-    
-  }else if(N/2==19){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2],CICLOS[[18]][i,2],CICLOS[[19]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2],CICLOS[[18]][i,2],CICLOS[[19]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CICLOS[[14]],col="blue4",lwd=1)
-    lines(CICLOS[[15]],col="brown4",lwd=1)
-    lines(CICLOS[[16]],col="brown2",lwd=1)
-    lines(CICLOS[[17]],col="blue2",lwd=1)
-    lines(CICLOS[[18]],col="chocolate4",lwd=1)
-    lines(CICLOS[[19]],col="cyan2",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-    
-  }else if(N/2==20){
-    for (i in 1:101) {
-      CP[i,2]<-mean(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2],CICLOS[[18]][i,2],CICLOS[[19]][i,2],CICLOS[[20]][i,2]))
-      Des[i,2]<-sd(c(CICLOS[[1]][i,2],CICLOS[[2]][i,2],CICLOS[[3]][i,2],CICLOS[[4]][i,2],CICLOS[[5]][i,2],CICLOS[[6]][i,2],CICLOS[[7]][i,2],CICLOS[[8]][i,2],CICLOS[[9]][i,2],CICLOS[[10]][i,2],CICLOS[[11]][i,2],CICLOS[[12]][i,2],CICLOS[[13]][i,2],CICLOS[[14]][i,2],CICLOS[[15]][i,2],CICLOS[[16]][i,2],CICLOS[[17]][i,2],CICLOS[[18]][i,2],CICLOS[[19]][i,2],CICLOS[[20]][i,2]))
-    } 
-    plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-         xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-         ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=1)
-    abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-    lines(CICLOS[[2]],col="blue",lwd=1)
-    lines(CICLOS[[3]],col="black",lwd=1)
-    lines(CICLOS[[4]],col="brown",lwd=1)
-    lines(CICLOS[[5]],col="yellow",lwd=1)
-    lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-    lines(CICLOS[[7]],col="moccasin",lwd=1)
-    lines(CICLOS[[8]],col="gold",lwd=1)
-    lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-    lines(CICLOS[[10]],col="deeppink1",lwd=1)
-    lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-    lines(CICLOS[[12]],col="chocolate3",lwd=1)
-    lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-    lines(CICLOS[[14]],col="blue4",lwd=1)
-    lines(CICLOS[[15]],col="brown4",lwd=1)
-    lines(CICLOS[[16]],col="brown2",lwd=1)
-    lines(CICLOS[[17]],col="blue2",lwd=1)
-    lines(CICLOS[[18]],col="chocolate4",lwd=1)
-    lines(CICLOS[[19]],col="cyan2",lwd=1)
-    lines(CICLOS[[20]],col="deeppink4",lwd=1)
-    lines(CP,col="red",lwd=1.5)
-  }
-  
-  
-#coordenadas desv
-Des1<-c(0:100,CP[,2]+Des[,2])
-dim(Des1)<-c(101,2)
-Des2<-c(0:100,CP[,2]-Des[,2])
-dim(Des2)<-c(101,2)
 
-plot(CP,type="l",col="red",main=expression("Promedio y desviaci贸n estandar"),
-     xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-     ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=2)
-abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-lines(Des1,col="blue",lwd=2)
-lines(Des2,col="blue",lwd=2)
+#Eliminaci髇 de ciclos
 
-#Expostaciones
-pdf("Pruebas/P52/P52R Pies Mov DER1.pdf",width=11.39,height=8.27)
-plot(CICLOS[[1]],type="l",col="green",main=expression("Aceleraciones capturadas"),
-     xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-     ylim=c(0, max(CP[,2])+max(Des[,2])+0.1),lwd=1)
-abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-lines(CICLOS[[2]],col="blue",lwd=1)
-lines(CICLOS[[3]],col="black",lwd=1)
-lines(CICLOS[[4]],col="brown",lwd=1)
-lines(CICLOS[[5]],col="yellow",lwd=1)
-lines(CICLOS[[6]],col="mediumslateblue",lwd=1)
-lines(CICLOS[[7]],col="moccasin",lwd=1)
-lines(CICLOS[[8]],col="gold",lwd=1)
-lines(CICLOS[[9]],col="darkslateblue",lwd=1)
-lines(CICLOS[[10]],col="deeppink1",lwd=1)
-lines(CICLOS[[11]],col="chartreuse2",lwd=1)
-lines(CICLOS[[12]],col="chocolate3",lwd=1)
-lines(CICLOS[[13]],col="cornsilk4",lwd=1)
-lines(CICLOS[[14]],col="blue4",lwd=1)
-lines(CICLOS[[15]],col="brown4",lwd=1)
-lines(CICLOS[[16]],col="brown2",lwd=1)
-lines(CICLOS[[17]],col="blue2",lwd=1)
-lines(CICLOS[[18]],col="chocolate4",lwd=1)
-lines(CICLOS[[19]],col="cyan2",lwd=1)
-lines(CICLOS[[20]],col="deeppink4",lwd=1)
-lines(CP,col="red",lwd=1.5)
-dev.off()
+ciclos[[9]]<-NULL
+
+porc<-data.frame(0:100)
+C<-data.frame(cbind(porc,as.data.frame(ciclos)))
+names(C)<-c("porcentaje",as.character(1:(num_ci-1)))#Checar los eliminados
+View(C)
+names(C)
+
+tema<-theme(axis.text=element_text(size=20),
+            axis.title=element_text(size=22,face="bold"),
+            plot.title = element_text(size = 30, face = "bold"))
+
+a1<-ggplot(data=C,aes(x=C[,1],y=C[,2],col=color[1]))+
+  geom_line(show.legend = FALSE)+
+  xlab("Ciclo [%]")+
+  ylab("Aceleraci髇 [g]")+
+  ggtitle("Ciclos Obtenidos")+tema
+  
+#####Ciclos a plotear####
+a2<-geom_line(data=C,aes(y=C[,3]),col=color[2])
+a3<-geom_line(data=C,aes(y=C[,4]),col=color[3])  
+a4<-geom_line(data=C,aes(y=C[,5]),col=color[4])  
+a5<-geom_line(data=C,aes(y=C[,6]),col=color[5])  
+a6<-geom_line(data=C,aes(y=C[,7]),col=color[6])  
+a7<-geom_line(data=C,aes(y=C[,8]),col=color[7])  
+a8<-geom_line(data=C,aes(y=C[,9]),col=color[8])  
+a9<-geom_line(data=C,aes(y=C[,10]),col=color[9])  
+a10<-geom_line(data=C,aes(y=C[,11]),col=color[10])  
+a11<-geom_line(data=C,aes(y=C[,12]),col=color[11])  
+a12<-geom_line(data=C,aes(y=C[,13]),col=color[12])  
+a13<-geom_line(data=C,aes(y=C[,14]),col=color[13])  
+a14<-geom_line(data=C,aes(y=C[,15]),col=color[14])  
+a15<-geom_line(data=C,aes(y=C[,16]),col=color[15])  
+a16<-geom_line(data=C,aes(y=C[,17]),col=color[16])  
+a17<-geom_line(data=C,aes(y=C[,18]),col=color[17])  
+
+
+#####Preparaci髇 resultados####
+length(C)-1
+graf_ciclos<-a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11#+a12+a13+a14+a15+a16+a17
+graf_ciclos
+
+prom<-as.data.frame(apply(C[,2:12],1,mean))
+desv<-as.data.frame(apply(C[,2:12],1,sd))
+
+result<-cbind(C$porcentaje,prom,desv)
+names(result)<-c("p_ciclo","promedio","desviaci髇_estandar")
+plot.data<-cbind(result,lower=result$promedio-result$desviaci髇_estandar,
+                 upper=result$promedio+result$desviaci髇_estandar)
+
+
+graf<-ggplot(data=plot.data,aes(x=p_ciclo,y=promedio))+
+  geom_line(col="red",size=1.2)+
+  geom_ribbon(data=plot.data,aes(ymin=lower,ymax=upper,x=p_ciclo),
+              alpha=0.3,colour="darkblue",fill="lightblue")
+
+graf_final<-graf+ggtitle("Aceleraci髇 Promedio y Desviaci髇 Estandar")+
+  xlab("Porcentaje de Ciclo [%]")+
+  ylab("Aceleraci髇 [g]")+tema
+
+graf_final
+
+
+###Salvar informaci髇####
+setwd("C:/Users/wazud/Desktop/Maestria/Repositorio Tesis/Parkinson Repositorio")
+nombre_graf1<-"ciclos_mov_MI.png"
+nombre_graf2<-"prom_mov_MI.png"
+nombre_archivo<-"p14r.csv"
+
+#Graficos ciclos
+
+png(nombre_graf1,width = 1500, height = 750)
+graf_ciclos
 dev.off()
 
-pdf("Pruebas/P52/P52R Pies Mov DER2.pdf",width=11.39,height=8.27)
-plot(CP,type="l",col="red",main=expression("Promedio y desviaci贸n estandar"),
-     xlab="% Ciclo", ylab="Aceleraci贸n [g]",
-     ylim=c(0, max(CP[,2])+max(Des[,2])),lwd=2)
-abline(h=c(0.5,1,1.5),v=c(10,20,30,40,50,60,70,80,90),col="pink")
-lines(Des1,col="blue",lwd=2)
-lines(Des2,col="blue",lwd=2)
+png(nombre_graf2,width = 1500, height = 750)
+graf_final
 dev.off()
 
-library(xlsx)
-write.xlsx(data.frame(CP,Des[,2]), "Pruebas/P52/RESULTADOs.xlsx") 
 
-#width=11.39,height=8.27
 

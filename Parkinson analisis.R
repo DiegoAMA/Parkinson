@@ -440,5 +440,12 @@ stats.k$dunn
 stats.p<-cluster.stats(dist(park.2.scaled),clusterprot.3$cluster)
 stats.p$dunn
 
+compar<-cluster.stats(dist(park.2.scaled),
+                      clusterprot.3$cluster,
+                      park_cluster.2$clustering)
+
+compar$corrected.rand #Indice de correción aleatoria (bajo)
+compar$vic#Distancia entre los dos métodos, (alto)
+
 #por lo que el más optimo es el de kmedoides con dos clusters
 

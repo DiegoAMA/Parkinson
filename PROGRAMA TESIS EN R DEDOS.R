@@ -33,7 +33,7 @@ while (i<= num_ci*2) {
 
 color<-randomColor(num_ci)
 plot(ciclos[[1]],type="l",
-     ylab="Aceleración [g]",xlab="porcentaje de ciclo %",
+     ylab="Aceleración [m/s^2]",xlab="porcentaje de ciclo %",
      col=color[1])
 legend("topright",legend=c(1:num_ci),cex=0.5,fill=color)
 grid()
@@ -75,7 +75,7 @@ tema<-theme(axis.text=element_text(size=20),
 a1<-ggplot(data=C,aes(x=C[,1],y=C[,2],col=color[1]))+
   geom_line(show.legend = FALSE)+
   xlab("Ciclo [%]")+
-  ylab("Aceleración [g]")+
+  ylab(expression("Aceleración "*m/s^2))+
   ggtitle("Ciclos Obtenidos")+tema
 
 #####Ciclos a plotear####
@@ -118,7 +118,7 @@ graf<-ggplot(data=plot.data,aes(x=p_ciclo,y=promedio))+
 
 graf_final<-graf+ggtitle("Aceleración Promedio y Desviación Estandar")+
   xlab("Porcentaje de Ciclo [%]")+
-  ylab("Aceleración [g]")+tema
+  ylab(expression("Aceleración "*m/s^2))+tema
 
 graf_final
 

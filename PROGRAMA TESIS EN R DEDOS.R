@@ -59,8 +59,8 @@ lines(ciclos[[20]],col=color[20])
 
 
 #Eliminación de ciclos
-
-ciclos[[9]]<-NULL
+names(ciclos)<-as.character(c(1:length(ciclos)))
+ciclos[as.character(c())] <- NULL
 
 porc<-data.frame(0:100)
 C<-data.frame(cbind(porc,as.data.frame(ciclos)))

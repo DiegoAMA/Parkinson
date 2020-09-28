@@ -274,9 +274,12 @@ dif(9)#No existe diferencia
 
 #El método hace diferencia en UPDRS III, Congelamiento,
 #Discinesia, Años de evolución y Rigiddez
+park.2$cluster.2<-as.factor(park.2$cluster.2)
+park.2$OFF<-as.factor(park.2$OFF)
 
-ggplot(park.2,aes(y=UPDRS,x=EDAD,size=OFF,col=cluster.2,alpha=0.5))+
-  geom_point()+
+ggplot(park.2,aes(y=UPDRS,x=EDAD,size=AÑOS_EVOL,
+                  col=cluster.2,shape=OFF))+
+  geom_point(alpha=0.5)+
   scale_size_continuous(range = c(5,15))
 
 G1<-park.2[park.2$cluster.2==1,]

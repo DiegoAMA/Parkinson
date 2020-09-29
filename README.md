@@ -12,4 +12,4 @@ Análisis Cinemático
 
 ![](screenshot/mov_manoIZQ1.png)
 ![](screenshot/mov_manoIZQ2.png)
-
+![](screenshot/comparacion.png)

@@ -5,7 +5,7 @@ Parkinson análisis: análisis estadístico y cluster de la base de datos
 ![](screenshot/Resumen.png)
 ![](screenshot/cluster.png)
 
-![](screenshot/clusterfinal.png)
+![](screenshot/cluster%20final.png)
 
 
 Análisis Cinemático

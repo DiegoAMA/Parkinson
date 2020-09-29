@@ -3,8 +3,8 @@
 Parkinson análisis: análisis estadístico y cluster de la base de datos
 
 ![](screenshot/Resumen.png)
+![](screenshot/mosaico.png)
 ![](screenshot/cluster.png)
-
 ![](screenshot/cluster%20final.png)
 
 

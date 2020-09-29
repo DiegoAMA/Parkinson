@@ -277,10 +277,17 @@ dif(9)#No existe diferencia
 park.2$cluster.2<-as.factor(park.2$cluster.2)
 park.2$OFF<-as.factor(park.2$OFF)
 
+tema<-theme(axis.text=element_text(size=15),axis.title=element_text(size=17,face="bold"),plot.title = element_text(size = 25, face = "bold"))
+
 ggplot(park.2,aes(y=UPDRS,x=EDAD,size=AÑOS_EVOL,
                   col=cluster.2,shape=OFF))+
   geom_point(alpha=0.5)+
-  scale_size_continuous(range = c(5,15))
+  scale_size_continuous(range = c(5,15))+tema
+
+#Para el ploteo se convirtieron en factor
+#Para el resultado es necesario numerico
+park.2$cluster.2<-as.numeric(park.2$cluster.2)
+park.2$OFF<-as.numeric(park.2$OFF)
 
 G1<-park.2[park.2$cluster.2==1,]
 G1$cluster.2<-NULL

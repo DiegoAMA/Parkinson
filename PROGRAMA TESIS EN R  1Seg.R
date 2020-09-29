@@ -5,8 +5,9 @@ library(ggplot2)
 library(randomcoloR)
 
 #Exportar
-url<-"P7/P7 postural manos.xlsx"
+url<-"P7/P7 reposo manos.xlsx"
 extremidad<-"Izquierda"
+#extremidad<-"Derecha"
 
 base <- read_excel(url,sheet = extremidad, col_names = FALSE)
 
@@ -34,7 +35,7 @@ while (i<= num_ci*2) {
 color<-randomColor(num_ci)
 plot(ciclos[[1]],type="l",
      ylab="Aceleración [m/s^2]",xlab="porcentaje de ciclo %",
-     col=color[1])
+     col=color[1],ylim=c(0.5,1.5))
 legend("topright",legend=c(1:num_ci),cex=0.5,fill=color)
 grid()
 lines(ciclos[[2]],col=color[2])  
@@ -60,14 +61,12 @@ lines(ciclos[[20]],col=color[20])
 
 #Eliminación de ciclos
 names(ciclos)<-as.character(c(1:length(ciclos)))
+ciclos[as.character(c(1,7,9,10,11,12))] <- NULL
 
-ciclos[as.character(c(6,7,8,9,19,20))] <- NULL
-
-
-length(C[1,])-1
 porc<-data.frame(0:100)
 C<-data.frame(cbind(porc,as.data.frame(ciclos)))
-names(C)<-c("porcentaje",as.character(1:(num_ci-6)))#Checar los eliminados
+length(C[1,])-1
+names(C)<-c("porcentaje",as.character(1:(length(C)-1)))#Checar los eliminados
 View(C)
 names(C)
 
@@ -104,11 +103,11 @@ a20<-geom_line(data=C,aes(y=C[,21]),col=color[20])
 
 #####Preparación resultados####
 length(C)-1
-graf_ciclos<-a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13#+a14+a15+a16+a17+a18+a19+a20
+graf_ciclos<-a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14+a15#+a16+a17+a18+a19+a20
 graf_ciclos
 
-prom<-as.data.frame(apply(C[,2:6],1,mean))#Checar núm ciclos
-desv<-as.data.frame(apply(C[,2:6],1,sd))
+prom<-as.data.frame(apply(C[,2:length(C)],1,mean))#Checar núm ciclos
+desv<-as.data.frame(apply(C[,2:length(C)],1,sd))
 
 result<-cbind(C$porcentaje,prom,desv)
 names(result)<-c("p_ciclo","promedio","desviación_estandar")

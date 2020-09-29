@@ -64,9 +64,8 @@ names(ciclos)<-as.character(c(1:length(ciclos)))
 ciclos[as.character(c(3,11))] <- NULL
 
 porc<-data.frame(0:100)
-eliminados<-0 #Checar los eliminados
 C<-data.frame(cbind(porc,as.data.frame(ciclos)))
-names(C)<-c("porcentaje",as.character(1:(num_ci-eliminados)))#Checar los eliminados
+names(C)<-c("porcentaje",as.character(1:(length(C)-1)))#Checar los eliminados
 View(C)
 names(C)
 

@@ -5,8 +5,9 @@ library(ggplot2)
 library(randomcoloR)
 
 #Exportar
-url<-"P14/p14 mov manos.xlsx"
-extremidad<-"Izquierda"
+url<-"P46/p46 manos reposo.xlsx"
+#extremidad<-"Izquierda"
+extremidad<-"Derecha"
 
 base <- read_excel(url,sheet = extremidad, col_names = FALSE)
 
@@ -34,7 +35,7 @@ while (i<= num_ci*2) {
 color<-randomColor(num_ci)
 plot(ciclos[[1]],type="l",
      ylab="Aceleración [g]",xlab="porcentaje de ciclo %",
-     col=color[1])
+     col=color[1],ylim=c(-0.1,1.5))
 legend("topright",legend=c(1:num_ci),cex=0.5,fill=color)
 grid()
 lines(ciclos[[2]],col=color[2])  
@@ -60,11 +61,12 @@ lines(ciclos[[20]],col=color[20])
 
 #Eliminación de ciclos
 names(ciclos)<-as.character(c(1:length(ciclos)))
-ciclos[as.character(c(9))] <- NULL
+ciclos[as.character(c(3,11))] <- NULL
 
 porc<-data.frame(0:100)
+eliminados<-0 #Checar los eliminados
 C<-data.frame(cbind(porc,as.data.frame(ciclos)))
-names(C)<-c("porcentaje",as.character(1:(num_ci-1)))#Checar los eliminados
+names(C)<-c("porcentaje",as.character(1:(num_ci-eliminados)))#Checar los eliminados
 View(C)
 names(C)
 
@@ -94,16 +96,19 @@ a13<-geom_line(data=C,aes(y=C[,14]),col=color[13])
 a14<-geom_line(data=C,aes(y=C[,15]),col=color[14])  
 a15<-geom_line(data=C,aes(y=C[,16]),col=color[15])  
 a16<-geom_line(data=C,aes(y=C[,17]),col=color[16])  
-a17<-geom_line(data=C,aes(y=C[,18]),col=color[17])  
+a17<-geom_line(data=C,aes(y=C[,18]),col=color[17])
+a18<-geom_line(data=C,aes(y=C[,19]),col=color[18])  
+a19<-geom_line(data=C,aes(y=C[,20]),col=color[19])  
+a20<-geom_line(data=C,aes(y=C[,21]),col=color[20])  
 
 
 #####Preparación resultados####
 length(C)-1
-graf_ciclos<-a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11#+a12+a13+a14+a15+a16+a17
+graf_ciclos<-a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12#+a13+a14+a15+a16+a17
 graf_ciclos
 
-prom<-as.data.frame(apply(C[,2:12],1,mean))
-desv<-as.data.frame(apply(C[,2:12],1,sd))
+prom<-as.data.frame(apply(C[,2:length(C)],1,mean))#Checar núm de ciclos+1
+desv<-as.data.frame(apply(C[,2:length(C)],1,sd))
 
 result<-cbind(C$porcentaje,prom,desv)
 names(result)<-c("p_ciclo","promedio","desviación_estandar")

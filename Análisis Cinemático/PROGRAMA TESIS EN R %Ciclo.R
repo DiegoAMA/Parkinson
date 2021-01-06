@@ -3,9 +3,10 @@ setwd("C:/Users/wazud/Desktop/Maestria/INVESTIGACION/Pruebas UNAM")
 library(readxl)
 library(ggplot2)
 library(randomcoloR)
+library(scales)
 
 #Exportar
-url<-"P46/p46 manos reposo.xlsx"
+url<-"P46/p46 manos mov.xlsx"
 #extremidad<-"Izquierda"
 extremidad<-"Derecha"
 
@@ -19,17 +20,10 @@ i<-2
 j<-1
 while (i<= num_ci*2) {
   ciclos[[j]]<-data.frame(na.omit(base[,c(i-1,i)]))
-  MIN<-min(ciclos[[j]][,1])
-  MAX<-max(ciclos[[j]][,1])
-  
-  k<-1
-  for (k in k:length(ciclos[[j]][,1])) {
-    ciclos[[j]][k,1]<-((ciclos[[j]][k,1]-MIN)/(MAX-MIN))*100
-  }
+  ciclos[[j]][,1]<-rescale(ciclos[[j]][,1],to=c(0,100))
   ciclos[[j]]<-data.frame(spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100))[,2]
   i=i+2
   j=j+1
-  
 }
 
 color<-randomColor(num_ci)

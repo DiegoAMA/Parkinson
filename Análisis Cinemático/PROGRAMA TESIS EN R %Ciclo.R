@@ -12,50 +12,51 @@ extremidad<-"Derecha"
 
 base <- read_excel(url,sheet = extremidad, col_names = FALSE)
 
-#Ciclos
-num_ci<-length(base[1,])/2
-ciclos<-list()
+#Extracción ciclos
 
-i<-2
-j<-1
-while (i<= num_ci*2) {
-  ciclos[[j]]<-data.frame(na.omit(base[,c(i-1,i)]))
-  ciclos[[j]][,1]<-rescale(ciclos[[j]][,1],to=c(0,100))
-  ciclos[[j]]<-data.frame(spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100))[,2]
-  i=i+2
-  j=j+1
+cycle_process<-function(dataframe){
+  num_ci<-ncol(base)/2
+  ciclos<-list()
+  
+  i<-2
+  j<-1
+  while (i<= num_ci*2) {
+    ciclos[[j]]<-data.frame(na.omit(base[,c(i-1,i)]))
+    ciclos[[j]][,1]<-rescale(ciclos[[j]][,1],to=c(0,100))
+    ciclos[[j]]<-data.frame(spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100))[,2]
+    i=i+2
+    j=j+1
+  }
+  names(ciclos)<-paste("C",as.character(c(1:length(ciclos))),
+                       sep="_")
+  ciclos
 }
+ciclos<-cycle_process(base)
 
-color<-randomColor(num_ci)
-plot(ciclos[[1]],type="l",
-     ylab="Aceleración [g]",xlab="porcentaje de ciclo %",
-     col=color[1],ylim=c(-0.1,1.5))
-legend("topright",legend=c(1:num_ci),cex=0.5,fill=color)
-grid()
-lines(ciclos[[2]],col=color[2])  
-lines(ciclos[[3]],col=color[3])  
-lines(ciclos[[4]],col=color[4])  
-lines(ciclos[[5]],col=color[5])  
-lines(ciclos[[6]],col=color[6])  
-lines(ciclos[[7]],col=color[7])  
-lines(ciclos[[8]],col=color[8])  
-lines(ciclos[[9]],col=color[9])  
-lines(ciclos[[10]],col=color[10])  
-lines(ciclos[[11]],col=color[11])  
-lines(ciclos[[12]],col=color[12])  
-lines(ciclos[[13]],col=color[13])  
-lines(ciclos[[14]],col=color[14])  
-lines(ciclos[[15]],col=color[15])  
-lines(ciclos[[16]],col=color[16])  
-lines(ciclos[[17]],col=color[17])  
-lines(ciclos[[18]],col=color[18])  
-lines(ciclos[[19]],col=color[19])  
-lines(ciclos[[20]],col=color[20])  
+cycles_plot<-function(ciclos_procesados){
+  
+  num_ci<-length(ciclos_procesados)
+  color<-randomColor(num_ci)
+  plot(ciclos_procesados[[1]],type="l",
+       ylab="Aceleración [g]",xlab="porcentaje de ciclo %",
+       col=color[1],ylim=c(-0.1,1.5))
+  legend("topright",legend=c(1:num_ci),cex=0.5,fill=color)
+  grid()
+  for (i in seq_along(1:(num_ci-1))) {
+    lines(ciclos[[i+1]],col=color[i+1])  
+  }
+  
 
+}
+cycles_plot(ciclos)
 
 #Eliminación de ciclos
-names(ciclos)<-as.character(c(1:length(ciclos)))
-ciclos[as.character(c(3,11))] <- NULL
+erase_cycles<-function(cycles,...){
+  v<-paste("C",c(...),sep="_")
+  cycles[c(v)] <- NULL  
+  cycles
+}
+ciclos2<-erase_cycles(ciclos,1,2)
 
 porc<-data.frame(0:100)
 C<-data.frame(cbind(porc,as.data.frame(ciclos)))

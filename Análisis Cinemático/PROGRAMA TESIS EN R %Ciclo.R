@@ -1,19 +1,9 @@
-setwd("C:/Users/wazud/Desktop/Maestria/INVESTIGACION/Pruebas UNAM")
-
 library(readxl)
 library(ggplot2)
 library(randomcoloR)
 library(scales)
 
-#Exportar
-url<-"P46/p46 manos mov.xlsx"
-#extremidad<-"Izquierda"
-extremidad<-"Derecha"
-
-base <- read_excel(url,sheet = extremidad, col_names = FALSE)
-
-#Extracción ciclos
-
+#Funciones
 cycle_process<-function(dataframe){
   num_ci<-ncol(base)/2
   ciclos<-list()
@@ -23,16 +13,15 @@ cycle_process<-function(dataframe){
   while (i<= num_ci*2) {
     ciclos[[j]]<-data.frame(na.omit(base[,c(i-1,i)]))
     ciclos[[j]][,1]<-rescale(ciclos[[j]][,1],to=c(0,100))
-    ciclos[[j]]<-data.frame(spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100))[,2]
+    ciclos[[j]]<-spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100)
+    ciclos[[j]]<-as.data.frame(ciclos[[j]])$y
     i=i+2
     j=j+1
   }
   names(ciclos)<-paste("C",as.character(c(1:length(ciclos))),
                        sep="_")
   ciclos
-}
-ciclos<-cycle_process(base)
-
+} #Extracción y procesamiento de ciclos
 cycles_plot<-function(ciclos_procesados){
   
   num_ci<-length(ciclos_procesados)
@@ -46,23 +35,28 @@ cycles_plot<-function(ciclos_procesados){
     lines(ciclos[[i+1]],col=color[i+1])  
   }
   
-
-}
-cycles_plot(ciclos)
-
-#Eliminación de ciclos
+  
+} #Ploteo de todos los ciclos
 erase_cycles<-function(cycles,...){
   v<-paste("C",c(...),sep="_")
   cycles[c(v)] <- NULL  
   cycles
-}
-ciclos2<-erase_cycles(ciclos,1,2)
+}#Eliminación de ciclos
 
-porc<-data.frame(0:100)
-C<-data.frame(cbind(porc,as.data.frame(ciclos)))
-names(C)<-c("porcentaje",as.character(1:(length(C)-1)))#Checar los eliminados
+#Importación datos
+setwd("C:/Users/wazud/Desktop/Maestria/INVESTIGACION/Pruebas UNAM")
+url<-"P46/p46 manos mov.xlsx"
+extremidad<-"Derecha" #"Izquierda"/"Derecha
+base <- read_excel(url,sheet = extremidad, col_names = FALSE)
+
+#Procesamiento
+ciclos<-cycle_process(base)
+cycles_plot(ciclos)
+ciclos2<-erase_cycles(ciclos,3,5,4)
+cycles_plot(ciclos2)
+
+C<-cbind("% ciclo"=c(0:100),data.frame(ciclos2))#En data frame
 View(C)
-names(C)
 
 tema<-theme(axis.text=element_text(size=20),
             axis.title=element_text(size=22,face="bold"),

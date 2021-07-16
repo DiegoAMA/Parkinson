@@ -41,15 +41,16 @@ erase_cycles<-function(cycles,...){
   cycles[c(v)] <- NULL  
   cycles
 }#Eliminación de ciclos
-all_ggplot<-function(df){
+all_ggplot<-function(df,x="p"){
   num_ci<-length(df)-1
+  x<-ifelse(x=="p","Ciclo [%]","Segundo [s]")
   color<-randomColor(num_ci)
   tema<-theme(axis.text=element_text(size=20),
               axis.title=element_text(size=22,face="bold"),
               plot.title = element_text(size = 30, face = "bold"))
   plot<-ggplot(data=C,aes(x=C[,1],y=C[,2],col=color[1]))+
     geom_line(show.legend = FALSE)+
-    xlab("Ciclo [%]")+
+    xlab(x)+
     ylab("Aceleración [g]")+
     ggtitle("Ciclos Obtenidos")+tema
   for (i in seq_along(1:(num_ci-1))) {

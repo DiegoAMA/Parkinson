@@ -2,8 +2,9 @@ library(readxl)
 library(ggplot2)
 library(randomcoloR)
 library(scales)
+library(tidyverse)
 
-#Funciones
+#Funciones--------------------
 cycle_process<-function(dataframe){
   num_ci<-ncol(base)/2
   ciclos<-list()
@@ -57,22 +58,58 @@ all_ggplot<-function(df,x="p"){
     plot <- plot + geom_line(aes_string(y = names(df)[i+1]),col=color[i+1])
   }
   plot
+}#Todos los ciclos finales en ggplot
+mean_ds_ggplot<-function(df){
+  tema<-theme(axis.text=element_text(size=20),
+              axis.title=element_text(size=22,face="bold"),
+              plot.title = element_text(size = 30, face = "bold"))
+  graf<-ggplot(data=df,aes(x=p_ciclo,y=promedio))+
+    geom_line(col="red",size=1.2)+
+    geom_ribbon(data=df,aes(ymin=lower,ymax=upper,x=p_ciclo),
+                alpha=0.3,colour="darkblue",fill="lightblue")
+  graf_final<-graf+ggtitle("Aceleración Promedio y Desviación Estandar")+
+    xlab("Porcentaje de Ciclo [%]")+
+    ylab("Aceleración [g]")+tema
+  
+  graf_final
+}#Dado p_ciclo, lower, upper grafica el prom y su desv
+
+#Importación datos---------------------
+#(Ya estan guardados como datos.RData, con un load se cargan)
+#Creación de lista de los datos
+archivos<-list.files(pattern="*.xlsx")
+hojas<-paste("Hoja",1:52,sep="")#Para extraccion
+pacientes<-paste("P",1:52,sep="")#para la lista
+
+#creacion de lista#
+datos<-as.list(1:10)
+names<-str_sub(archivos,1,str_locate(archivos,".xlsx")[,1]-1)#Sustrae nombre unicamente
+names(datos)<-names#asigna nombres
+datos<-lapply(datos, list)
+for (i in seq_along(names)) {
+  datos[[i]]<-lapply(pacientes,list)
+  names(datos[[1]])<-pacientes
 }
 
-#Importación datos
-setwd("C:/Users/wazud/Desktop/Maestria/INVESTIGACION/Pruebas UNAM")
-url<-"P46/p46 manos mov.xlsx"
-extremidad<-"Derecha" #"Izquierda"/"Derecha
-base <- read_excel(url,sheet = extremidad, col_names = FALSE)
+for (i in seq_along(archivos)) {
+  for (j in seq_along(pacientes)) {
+    datos[[i]][[j]]<-read_excel(archivos[i],col_names = FALSE,sheet=hojas[j])  
+  }  
+}#Exportacion de datos en lista
 
-#Procesamiento
+#save(datos,file="datos.RData")
+#Carga de datos.RData guardados
+load("datos.RData")
+
+
+#Procesamiento--------
+base<-datos$MANO_MOV_DER$P1
 ciclos<-cycle_process(base)
 cycles_plot(ciclos)
-ciclos_f<-erase_cycles(ciclos,13,5,4)
+ciclos_f<-erase_cycles(ciclos,10,10)
 cycles_plot(ciclos_f)
 
 C<-cbind("% ciclo"=c(0:100),data.frame(ciclos_f))#En data frame
-View(C)
 
 #####Ciclos finales en ggplot####
 all_ggplot(C)
@@ -85,17 +122,7 @@ names(result)<-c("p_ciclo","promedio","desviación_estandar")
 plot.data<-cbind(result,lower=result$promedio-result$desviación_estandar,
                  upper=result$promedio+result$desviación_estandar)
 
-
-graf<-ggplot(data=plot.data,aes(x=p_ciclo,y=promedio))+
-  geom_line(col="red",size=1.2)+
-  geom_ribbon(data=plot.data,aes(ymin=lower,ymax=upper,x=p_ciclo),
-              alpha=0.3,colour="darkblue",fill="lightblue")
-graf
-graf_final<-graf+ggtitle("Aceleración Promedio y Desviación Estandar")+
-  xlab("Porcentaje de Ciclo [%]")+
-  ylab("Aceleración [g]")+tema
-
-graf_final
+mean_ds_ggplot(plot.data)
 
 
 ###Salvar información####
@@ -113,6 +140,4 @@ dev.off()
 png(nombre_graf2,width = 1500, height = 750)
 graf_final
 dev.off()
-
-
 

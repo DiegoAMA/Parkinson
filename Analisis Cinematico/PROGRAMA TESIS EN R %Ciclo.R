@@ -77,8 +77,7 @@ mean_ds_ggplot<-function(df){
 #Importación datos---------------------
 #(Ya estan guardados como datos.RData, con un load se cargan)
 #Creación de lista de los datos
-archivos<-list.files(path="Datos Cinemáticos/",
-                     pattern = ".xlsx")
+archivos<-list.files(pattern="*.xlsx")
 hojas<-paste("Hoja",1:52,sep="")#Para extraccion
 pacientes<-paste("P",1:52,sep="")#para la lista
 

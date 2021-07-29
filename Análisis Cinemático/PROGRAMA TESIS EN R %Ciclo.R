@@ -98,9 +98,9 @@ for (i in seq_along(archivos)) {
   }  
 }#Exportacion de datos en lista
 
-#save(datos,file="datos.RData")
+#save(datos,file="dDatos Cinemáticos/datos.RData")
 #Carga de datos.RData guardados
-load("datos.RData")
+load("Datos Cinemáticos/datos.RData")
 
 
 #Procesamiento--------

@@ -23,6 +23,16 @@ cycle_process<-function(dataframe){
                        sep="_")
   ciclos
 } #Extracción y procesamiento de ciclos
+cycles_boxplot<-function(ciclos_procesados){
+  ciclos_procesados<-t(as.data.frame(ciclos_procesados))
+  max<-max(ciclos_procesados)
+  min<-min(ciclos_procesados)
+  boxplot(ciclos_procesados,
+          ylab="Aceleración [g]",xlab="porcentaje de ciclo %",
+          col="darkred",ylim=c(min-0.05,max+0.05))
+  grid(nx=101,ny=NULL)
+  
+} #Boxplot de los ciclos para detectar outliers
 cycles_plot<-function(ciclos_procesados){
   num_ci<-length(ciclos_procesados)
   color<-randomColor(num_ci)
@@ -37,6 +47,16 @@ cycles_plot<-function(ciclos_procesados){
 
   
 } #Ploteo de todos los ciclos
+replace_outliers<-function(data){
+  data<-t(as.data.frame(data))
+  qrts<-quantile(data,probs = c(0.25,0.75))
+  caps<-quantile(data,probs = c(0.05,0.95))
+  iqr<-qrts[2]-qrts[1]
+  h<-1.5*iqr
+  data[data<qrts[1]-h]<-caps[1]
+  data[data>qrts[2]+h]<-caps[2]
+  as.data.frame(t(data))
+}#Remplaza outliers por el percentil 10 y 90 respectivamente
 erase_cycles<-function(cycles,...){
   v<-paste("C",c(...),sep="_")
   cycles[c(v)] <- NULL  
@@ -106,8 +126,10 @@ load("Datos Cinemáticos/datos.RData")
 #Procesamiento--------
 base<-datos$MANO_MOV_DER$P1
 ciclos<-cycle_process(base)
+cycles_boxplot(ciclos)
+ciclos_f<-replace_outliers(ciclos)
+cycles_boxplot(ciclos_f)
 cycles_plot(ciclos)
-ciclos_f<-erase_cycles(ciclos,10,10)
 cycles_plot(ciclos_f)
 
 C<-cbind("% ciclo"=c(0:100),data.frame(ciclos_f))#En data frame

@@ -6,21 +6,24 @@ library(tidyverse)
 
 #Funciones--------------------
 cycle_process<-function(dataframe){
-  num_ci<-ncol(base)/2
+  num_ci<-ncol(dataframe)/2
   ciclos<-list()
-  
-  i<-2
-  j<-1
-  while (i<= num_ci*2) {
-    ciclos[[j]]<-data.frame(na.omit(base[,c(i-1,i)]))
-    ciclos[[j]][,1]<-rescale(ciclos[[j]][,1],to=c(0,100))
-    ciclos[[j]]<-spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100)
-    ciclos[[j]]<-as.data.frame(ciclos[[j]])$y
-    i=i+2
-    j=j+1
+  if(num_ci!=0){
+    i<-2
+    j<-1
+    while (i<= num_ci*2) {
+      ciclos[[j]]<-data.frame(na.omit(dataframe[,c(i-1,i)]))
+      ciclos[[j]][,1]<-rescale(ciclos[[j]][,1],to=c(0,100))
+      ciclos[[j]]<-spline(ciclos[[j]][,1],ciclos[[j]][,2],xout = 0:100)
+      ciclos[[j]]<-as.data.frame(ciclos[[j]])$y
+      i=i+2
+      j=j+1
+    }
+    names(ciclos)<-paste("C",as.character(c(1:length(ciclos))),
+                         sep="_")
+  }else{
+    ciclos<-NA
   }
-  names(ciclos)<-paste("C",as.character(c(1:length(ciclos))),
-                       sep="_")
   ciclos
 } #Extracción y procesamiento de ciclos
 cycles_boxplot<-function(ciclos_procesados){
@@ -114,18 +117,19 @@ for (i in seq_along(names)) {
 
 for (i in seq_along(archivos)) {
   for (j in seq_along(pacientes)) {
-    datos[[i]][[j]]<-read_excel(archivos[i],col_names = FALSE,sheet=hojas[j])  
+    a<-paste("Datos Cinemáticos/",archivos[i],sep="")
+    datos[[i]][[j]]<-read_excel(a,col_names = FALSE,sheet=hojas[j])  
   }  
 }#Exportacion de datos en lista
 
-#save(datos,file="dDatos Cinemáticos/datos.RData")
+#save(datos,file="Datos Cinemáticos/datos.RData")
 #Carga de datos.RData guardados
 load("Datos Cinemáticos/datos.RData")
 
 
 #Procesamiento--------
-base<-datos$MANO_MOV_DER$P1
-ciclos<-cycle_process(base)
+data<-datos$MANO_MOV_DER$P1
+ciclos<-cycle_process(data)
 cycles_boxplot(ciclos)
 ciclos_f<-replace_outliers(ciclos)
 cycles_boxplot(ciclos_f)
